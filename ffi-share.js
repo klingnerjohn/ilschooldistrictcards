@@ -131,83 +131,212 @@
             } catch(e){ res(); }
           });
           Promise.race([Promise.all([ready, imgReady, iconReady]), timeout]).then(function(){
-            var W = 1080, H = 1080;
+            var W = 1080, H = 1920;
             var c = document.createElement('canvas'); c.width = W; c.height = H;
             var x = c.getContext('2d');
             x.fillStyle = '#ffffff'; x.fillRect(0,0,W,H);
-            x.fillStyle = '#fe5f05'; x.fillRect(0,0,W,14); x.fillRect(0,H-14,W,14);
+            x.fillStyle = '#fe5f05'; x.fillRect(0,0,W,18); x.fillRect(0,H-18,W,18);
             if (logoImg.naturalWidth) {
-              var lw = 440, lh = lw * logoImg.naturalHeight / logoImg.naturalWidth;
-              x.drawImage(logoImg, (W-lw)/2, 70, lw, lh);
+              var lw = 520, lh = lw * logoImg.naturalHeight / logoImg.naturalWidth;
+              x.drawImage(logoImg, (W-lw)/2, 120, lw, lh);
             }
             x.textAlign = 'center';
             var y = 250;
+            if (opts.trend) {
+              var T = opts.trend;
+              var lb = logoImg.naturalWidth ? 120 + 520 * logoImg.naturalHeight / logoImg.naturalWidth : 300;
+              var tpy = lb + 170;
+              if (opts.pre) {
+                var tfs = 78; x.font = "800 " + tfs + "px Montserrat, sans-serif";
+                var tpl = wrapText(x, String(opts.pre).toUpperCase(), 940);
+                while (tpl.length > 2 && tfs > 44) { tfs -= 3; x.font = "800 " + tfs + "px Montserrat, sans-serif"; tpl = wrapText(x, String(opts.pre).toUpperCase(), 940); }
+                x.fillStyle = '#fe5f05';
+                for (var tpi = 0; tpi < tpl.length; tpi++) { x.fillText(tpl[tpi], W/2, tpy + tpi * (tfs + 8)); }
+                tpy += (tpl.length - 1) * (tfs + 8);
+              }
+              x.fillStyle = '#13294b';
+              var ths = 86; x.font = "900 " + ths + "px Montserrat, sans-serif";
+              var thTxt = T.hed || 'Spending vs. enrollment since 2010';
+              var thl = wrapText(x, thTxt, 930);
+              while (thl.length > 3 && ths > 56) { ths -= 4; x.font = "900 " + ths + "px Montserrat, sans-serif"; thl = wrapText(x, thTxt, 930); }
+              var thy = tpy + 320;
+              for (var thi = 0; thi < thl.length; thi++) { x.fillText(thl[thi], W/2, thy); thy += ths * 1.12; }
+              var tSrcY = H - 96;
+              var tTop = thy + 44;
+              var tK = Math.min(1, (tSrcY - 130 - tTop) / 700);
+              if (tK < 0.6) tK = 0.6;
+              var tBubCy = 540 * tK, tBubR = 130 * tK, tBlock = tBubCy + tBubR + 16;
+              var tTitleY = 76 * tK, tRow1 = 240 * tK, tRowStep = 130 * tK;
+              x.fillStyle = '#fe5f05'; x.fillRect(W/2 - 2, tTop, 4, tBlock);
+              var tp = [ { cx: 285, d: T.a }, { cx: 795, d: T.b } ];
+              for (var tpx = 0; tpx < 2; tpx++) {
+                var pc = tp[tpx].cx, dd2 = tp[tpx].d || {};
+                x.textAlign = 'center'; x.fillStyle = '#13294b';
+                var sfs = Math.round(60 * tK); x.font = "900 " + sfs + "px Montserrat, sans-serif";
+                var stl = wrapText(x, dd2.t || '', 430);
+                while (stl.length > 2 && sfs > 26) { sfs -= 2; x.font = "900 " + sfs + "px Montserrat, sans-serif"; stl = wrapText(x, dd2.t || '', 430); }
+                var sty = tTop + tTitleY;
+                for (var sti = 0; sti < stl.length; sti++) { x.fillText(stl[sti], pc, sty); sty += sfs * 1.12; }
+                var pairs = [ [dd2.y1 || '2010', dd2.v1 || '', '#13294b'], [dd2.y2 || '2024', dd2.v2 || '', '#fe5f05'] ];
+                var vfs = Math.round(92 * tK); x.font = "900 " + vfs + "px Montserrat, sans-serif";
+                while (vfs > 44 && (x.measureText(String(pairs[0][1])).width > 330 || x.measureText(String(pairs[1][1])).width > 330)) {
+                  vfs -= 3; x.font = "900 " + vfs + "px Montserrat, sans-serif";
+                }
+                var ry2 = tTop + tRow1;
+                var yrFS = Math.round(50 * tK), yrGap = Math.round(24 * tK);
+                var wYr = 0, wVal = 0, pw;
+                x.font = "700 " + yrFS + "px Montserrat, sans-serif";
+                for (pw = 0; pw < 2; pw++) { wYr = Math.max(wYr, x.measureText(pairs[pw][0]).width); }
+                x.font = "900 " + vfs + "px Montserrat, sans-serif";
+                for (pw = 0; pw < 2; pw++) { wVal = Math.max(wVal, x.measureText(String(pairs[pw][1])).width); }
+                var pairLeft = pc - (wYr + yrGap + wVal) / 2;
+                for (var pri = 0; pri < 2; pri++) {
+                  x.textAlign = 'right'; x.fillStyle = '#13294b';
+                  x.font = "700 " + yrFS + "px Montserrat, sans-serif";
+                  x.fillText(pairs[pri][0], pairLeft + wYr, ry2);
+                  x.textAlign = 'left'; x.fillStyle = pairs[pri][2];
+                  x.font = "900 " + vfs + "px Montserrat, sans-serif";
+                  x.fillText(String(pairs[pri][1]), pairLeft + wYr + yrGap, ry2);
+                  ry2 += tRowStep;
+                }
+                x.textAlign = 'center';
+                if (dd2.bub) {
+                  var bcy = tTop + tBubCy, br = tBubR;
+                  x.fillStyle = '#fe5f05'; x.beginPath(); x.arc(pc, bcy, br, 0, 7); x.fill();
+                  var bparts = String(dd2.bub).trim().split(/\s+/);
+                  var bl1 = (bparts[0] || '').toUpperCase(), bl2 = bparts.slice(1).join(' ');
+                  var bfs = Math.round(58 * tK); x.font = "900 " + bfs + "px Montserrat, sans-serif";
+                  while (bfs > 26 && (x.measureText(bl1).width > tBubR * 1.58 || x.measureText(bl2).width > tBubR * 1.58)) { bfs -= 2; x.font = "900 " + bfs + "px Montserrat, sans-serif"; }
+                  x.fillStyle = '#ffffff'; x.textBaseline = 'middle';
+                  x.fillText(bl1, pc, bcy - bfs * 0.6);
+                  x.fillText(bl2, pc, bcy + bfs * 0.6);
+                  x.textBaseline = 'alphabetic';
+                }
+              }
+              x.fillStyle = 'rgba(19,41,75,0.55)'; x.font = "600 40px Montserrat, sans-serif";
+              x.fillText(T.src || 'Source: ISBE Illinois Report Card, 2024', W/2, tSrcY);
+              c.toBlob(cb, 'image/png');
+              return;
+            }
             if (opts.duo) {
               var D = opts.duo;
-              var logoBottom = logoImg.naturalWidth ? 70 + 440 * logoImg.naturalHeight / logoImg.naturalWidth : 210;
-              var preY = logoBottom + 62;
-              if (opts.pre) { x.fillStyle = '#fe5f05'; x.font = "800 34px Montserrat, sans-serif"; x.fillText(String(opts.pre).toUpperCase(), W/2, preY); }
+              var logoBottom = logoImg.naturalWidth ? 120 + 520 * logoImg.naturalHeight / logoImg.naturalWidth : 300;
+              var preY = logoBottom + 170;
+              if (opts.pre) {
+                var pfs = 78; x.font = "800 " + pfs + "px Montserrat, sans-serif";
+                var pTxt = String(opts.pre).toUpperCase(), pl = wrapText(x, pTxt, 940);
+                while (pl.length > 2 && pfs > 44) { pfs -= 3; x.font = "800 " + pfs + "px Montserrat, sans-serif"; pl = wrapText(x, pTxt, 940); }
+                x.fillStyle = '#fe5f05';
+                for (var pli = 0; pli < pl.length; pli++) { x.fillText(pl[pli], W/2, preY + pli * (pfs + 8)); }
+                preY += (pl.length - 1) * (pfs + 8);
+              }
               var hedTxt = D.hed || 'Students can\u2019t read or do math at grade level';
               x.fillStyle = '#13294b';
-              var hs = 62; x.font = "900 " + hs + "px Montserrat, sans-serif";
-              var hl = wrapText(x, hedTxt, 900);
-              while (hl.length > 2 && hs > 40) { hs -= 4; x.font = "900 " + hs + "px Montserrat, sans-serif"; hl = wrapText(x, hedTxt, 900); }
-              var hy = preY + 92;
+              var hs = 86; x.font = "900 " + hs + "px Montserrat, sans-serif";
+              var hl = wrapText(x, hedTxt, 930);
+              while (hl.length > 3 && hs > 56) { hs -= 4; x.font = "900 " + hs + "px Montserrat, sans-serif"; hl = wrapText(x, hedTxt, 900); }
+              var hy = preY + 320;
               for (var hi = 0; hi < hl.length; hi++) { x.fillText(hl[hi], W/2, hy); hy += hs * 1.12; }
-              var dTop = 452, dBot = 872;
-              x.fillStyle = '#fe5f05'; x.fillRect(W/2 - 2, dTop, 4, dBot - dTop);
+              var srcY = H - 96;
               var panels = [
                 { cx: 285, subj: 'READING', num: D.r, only: D.ro },
                 { cx: 795, subj: 'MATH', num: D.m, only: D.mo }
               ];
+              var capBase = D.cap || 'of all students are proficient';
+              var capFS = 54, capLH = 66, capTop = 340, capLines = [], maxLines = 0, li;
+              x.font = "700 " + capFS + "px Montserrat, sans-serif";
+              for (li = 0; li < 2; li++) {
+                capLines[li] = wrapText(x, capBase + ' in ' + panels[li].subj, 470);
+                if (capLines[li].length > maxLines) maxLines = capLines[li].length;
+              }
+              var blockH = capTop + (maxLines - 1) * capLH;
+              var dTop = hy + 44, maxTop = srcY - 130 - blockH;
+              while (maxTop < dTop && capFS > 26) {
+                capFS -= 2; capLH -= 3;
+                x.font = "700 " + capFS + "px Montserrat, sans-serif";
+                maxLines = 0;
+                for (li = 0; li < 2; li++) {
+                  capLines[li] = wrapText(x, capBase + ' in ' + panels[li].subj, 470);
+                  if (capLines[li].length > maxLines) maxLines = capLines[li].length;
+                }
+                blockH = capTop + (maxLines - 1) * capLH;
+                maxTop = srcY - 130 - blockH;
+              }
+              if (dTop > maxTop) dTop = maxTop;
+              var dBot = dTop + blockH + 14;
+              x.fillStyle = '#fe5f05'; x.fillRect(W/2 - 2, dTop, 4, dBot - dTop);
               for (var pi = 0; pi < 2; pi++) {
                 var p = panels[pi];
-                x.fillStyle = '#13294b'; x.font = "900 48px Montserrat, sans-serif";
-                x.fillText(p.subj, p.cx, dTop + 56);
-                if (p.only) { x.fillStyle = '#13294b'; x.font = "700 40px Montserrat, sans-serif"; x.fillText(p.only, p.cx, dTop + 124); }
-                var ns = 170; x.font = "900 " + ns + "px Montserrat, sans-serif";
-                while (ns > 90 && x.measureText(String(p.num)).width > 420) { ns -= 6; x.font = "900 " + ns + "px Montserrat, sans-serif"; }
-                x.fillStyle = '#fe5f05'; x.fillText(String(p.num), p.cx, dTop + 272);
-                x.fillStyle = '#13294b'; x.font = "700 32px Montserrat, sans-serif";
-                var cl = wrapText(x, D.cap || 'of all students are proficient', 400);
-                var cy = dTop + 336;
-                for (var ci2 = 0; ci2 < cl.length; ci2++) { x.fillText(cl[ci2], p.cx, cy); cy += 42; }
+                if (p.only) { x.fillStyle = '#13294b'; x.font = "700 46px Montserrat, sans-serif"; x.fillText(p.only, p.cx, dTop + 54); }
+                var ns = 190; x.font = "900 " + ns + "px Montserrat, sans-serif";
+                while (ns > 120 && x.measureText(String(p.num)).width > 440) { ns -= 6; x.font = "900 " + ns + "px Montserrat, sans-serif"; }
+                x.fillStyle = '#fe5f05'; x.fillText(String(p.num), p.cx, dTop + 250);
+                x.fillStyle = '#13294b'; x.font = "700 " + capFS + "px Montserrat, sans-serif";
+                var cl = capLines[pi], cy = dTop + capTop;
+                for (var ci2 = 0; ci2 < cl.length; ci2++) { x.fillText(cl[ci2], p.cx, cy); cy += capLH; }
               }
               x.fillStyle = 'rgba(19,41,75,0.55)'; x.font = "600 30px Montserrat, sans-serif";
-              x.fillText(D.src || 'Source: ISBE Illinois Report Card, 2024', W/2, H - 64);
+              x.font = "600 40px Montserrat, sans-serif";
+              x.fillText(D.src || 'Source: ISBE Illinois Report Card, 2024', W/2, srcY);
               c.toBlob(cb, 'image/png');
               return;
             }
-            if (iconImg && iconImg.width) {
-              var ih = 130, iw = ih * iconImg.width / iconImg.height;
-              x.drawImage(iconImg, (W-iw)/2, y, iw, ih);
-              y += 170;
-            } else { y += 60; }
-            if (opts.pre) {
-              x.fillStyle = '#fe5f05'; x.font = "800 34px Montserrat, sans-serif";
-              x.fillText(opts.pre.toUpperCase(), W/2, y - 24);
+            var logoBase = logoImg.naturalWidth ? 120 + 520 * logoImg.naturalHeight / logoImg.naturalWidth : 300;
+            if (!opts.pre && opts.title && opts.title.indexOf('\u2014') > -1) {
+              var tparts = opts.title.split('\u2014');
+              opts.pre = tparts[0].replace(/\s+$/, '');
+              opts.title = tparts.slice(1).join('\u2014').replace(/^\s+/, '');
             }
+            if (opts.pre) {
+              var gfs = 78; x.font = "800 " + gfs + "px Montserrat, sans-serif";
+              var gTxt = String(opts.pre).toUpperCase(), gl = wrapText(x, gTxt, 940);
+              while (gl.length > 2 && gfs > 44) { gfs -= 3; x.font = "800 " + gfs + "px Montserrat, sans-serif"; gl = wrapText(x, gTxt, 940); }
+              x.fillStyle = '#fe5f05';
+              var gy = logoBase + 170;
+              for (var gli = 0; gli < gl.length; gli++) { x.fillText(gl[gli], W/2, gy); gy += gfs + 10; }
+              y = gy + 210 - (gfs + 10);
+            } else { y = logoBase + 110; }
+            if (iconImg && iconImg.width && !opts.rows) {
+              var ih = 180, iw = ih * iconImg.width / iconImg.height;
+              x.drawImage(iconImg, (W-iw)/2, y, iw, ih);
+              y += 240;
+            } else { y += 80; }
             if (opts.rows) {
               x.fillStyle = '#13294b';
-              var ts = 60;
+              var ts = 86;
               x.font = "900 " + ts + "px Montserrat, sans-serif";
-              while (ts > 34 && x.measureText(opts.title.toUpperCase()).width > 960) {
+              while (ts > 46 && x.measureText(opts.title.toUpperCase()).width > 960) {
                 ts -= 2; x.font = "900 " + ts + "px Montserrat, sans-serif";
               }
-              var ty = y + 50;
+              var ty = opts.pre ? y + 100 : y + 70;
               x.fillText(opts.title.toUpperCase(), W/2, ty);
               var rows = opts.rows;
-              var rowsStart = ty + 60;
-              var bottomLimit = opts.bubble ? 700 : H - 140;
-              var rowH = opts.bubble ? 80 : Math.min(105, (bottomLimit - rowsStart) / rows.length);
+              var rowsStart = ty + 100;
+              var bottomLimit = opts.bubble ? H - 520 : H - 150;
+              var rowH = opts.bubble ? 120 : Math.min(230, (bottomLimit - rowsStart) / rows.length);
+              var fsCap = Math.round(((bottomLimit - rowsStart) / 6) * 0.62);
+              var cellFS = opts.bubble ? Math.round(rowH * 0.52) : Math.min(fsCap, Math.round(rowH * 0.7));
               var cols = rows[0].length;
+              var colSpace = cols === 2 ? W * 0.30 : (W * 0.6) / (cols - 1);
+              var allowW = colSpace - 28;
+              var cellFits = function(fsz){
+                var ri2, ci3;
+                for (ri2 = 0; ri2 < rows.length; ri2++) {
+                  for (ci3 = 0; ci3 < rows[ri2].length; ci3++) {
+                    x.font = "900 " + fsz + "px Montserrat, sans-serif";
+                    if (x.measureText(String(rows[ri2][ci3])).width > allowW) return false;
+                  }
+                }
+                return true;
+              };
+              while (cellFS > 24 && !cellFits(cellFS)) cellFS -= 2;
               rows.forEach(function(r, ri){
                 var ry = rowsStart + ri * rowH + rowH * 0.7;
                 r.forEach(function(cell, ci){
                   var cx = cols === 2 ? (ci === 0 ? W*0.36 : W*0.66) : W*(0.2 + 0.6*ci/(cols-1));
                   var isNum = /[%$0-9]/.test(cell) && ci > 0;
                   x.fillStyle = isNum ? '#fe5f05' : '#13294b';
-                  x.font = (isNum ? "900 " : "700 ") + Math.round(rowH*0.52) + "px Montserrat, sans-serif";
+                  x.font = (isNum ? "900 " : "700 ") + cellFS + "px Montserrat, sans-serif";
                   x.fillText(cell, cx, ry);
                 });
               });
@@ -215,13 +344,13 @@
                 var parts = String(opts.bubble).trim().split(/\s+/);
                 var l1 = (parts[0] || '').toUpperCase();
                 var l2 = parts.slice(1).join(' ');
-                var cy = H - 250, r = 125;
+                var cy = H - 380, r = 175;
                 x.fillStyle = '#fe5f05';
                 x.beginPath(); x.arc(W/2, cy, r, 0, 7); x.fill();
                 x.fillStyle = '#ffffff';
-                var fs = 58;
+                var fs = 80;
                 x.font = "900 " + fs + "px Montserrat, sans-serif";
-                while (fs > 26 && (x.measureText(l1).width > 190 || x.measureText(l2).width > 190)) {
+                while (fs > 34 && (x.measureText(l1).width > 265 || x.measureText(l2).width > 265)) {
                   fs -= 2; x.font = "900 " + fs + "px Montserrat, sans-serif";
                 }
                 x.textBaseline = 'middle';
@@ -241,20 +370,39 @@
               var rly = y + (opts.rankOf ? 410 : 360);
               rl.forEach(function(l){ x.fillText(l, W/2, rly); rly += 72; });
             } else {
-              if (opts.only) {
-                x.fillStyle = '#13294b'; x.font = "700 66px Montserrat, sans-serif";
-                x.fillText(opts.only.toUpperCase(), W/2, y + 50);
+              if (opts.hed) {
+                x.fillStyle = '#13294b';
+                var dfs = 86; x.font = "900 " + dfs + "px Montserrat, sans-serif";
+                var dhl = wrapText(x, opts.hed, 930);
+                while (dhl.length > 3 && dfs > 52) { dfs -= 4; x.font = "900 " + dfs + "px Montserrat, sans-serif"; dhl = wrapText(x, opts.hed, 900); }
+                var dhy = y + 56;
+                for (var dhi = 0; dhi < dhl.length; dhi++) { x.fillText(dhl[dhi], W/2, dhy); dhy += dfs * 1.12; }
+                y = dhy - dfs * 1.12 + 24;
               }
-              var nb = opts.only ? y + 280 : y + 230;
-              x.fillStyle = '#fe5f05'; x.font = "900 220px Montserrat, sans-serif";
+              if (opts.only) {
+                x.fillStyle = '#13294b'; x.font = "700 88px Montserrat, sans-serif";
+                x.fillText(opts.only.toUpperCase(), W/2, y + 80);
+              }
+              var srcBase = H - 96;
+              var numFS = 320, labFS = 74, labLH = 98;
+              var nb = opts.only ? y + 380 : y + 300;
+              x.font = "700 " + labFS + "px Montserrat, sans-serif";
+              var lines = wrapText(x, opts.label, 920);
+              var fits = function(){ return nb + 150 + (lines.length - 1) * labLH <= srcBase - 110; };
+              while (!fits() && labFS > 46) {
+                labFS -= 3; labLH -= 4;
+                x.font = "700 " + labFS + "px Montserrat, sans-serif";
+                lines = wrapText(x, opts.label, 880);
+              }
+              while (!fits() && numFS > 190) { numFS -= 10; nb -= 12; }
+              x.fillStyle = '#fe5f05'; x.font = "900 " + numFS + "px Montserrat, sans-serif";
               x.fillText(opts.num, W/2, nb);
-              x.fillStyle = '#13294b'; x.font = "700 54px Montserrat, sans-serif";
-              var lines = wrapText(x, opts.label, 880);
-              var ly = nb + 110;
-              lines.forEach(function(l){ x.fillText(l, W/2, ly); ly += 72; });
+              x.fillStyle = '#13294b'; x.font = "700 " + labFS + "px Montserrat, sans-serif";
+              var ly = nb + 150;
+              lines.forEach(function(l){ x.fillText(l, W/2, ly); ly += labLH; });
             }
-            x.fillStyle = 'rgba(19,41,75,0.55)'; x.font = "600 30px Montserrat, sans-serif";
-            x.fillText(opts.source || 'Source: ISBE Illinois Report Card, 2024', W/2, H-64);
+            x.fillStyle = 'rgba(19,41,75,0.55)'; x.font = "600 40px Montserrat, sans-serif";
+            x.fillText(opts.source || 'Source: ISBE Illinois Report Card, 2024', W/2, H-96);
             c.toBlob(cb, 'image/png');
           });
         }
@@ -299,60 +447,73 @@
       : Promise.resolve();
     Promise.race([ready, new Promise(function(res){ setTimeout(res, 1200); })]).then(function(){ ptxLogoReady(draw); });
     function draw(){
-      var W = 1080, H = 1080;
+      var W = 1080, H = 1920;
       var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
       var x = cv.getContext('2d');
       x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
-      x.fillStyle = '#fe5f05'; x.fillRect(0, 0, W, 16); x.fillRect(0, H - 16, W, 16);
+      x.fillStyle = '#fe5f05'; x.fillRect(0, 0, W, 20); x.fillRect(0, H - 20, W, 20);
       x.textAlign = 'center';
       var top = 92;
       if (ptxLogo && ptxLogo.naturalWidth) {
-        var lw = 380, lh = lw * ptxLogo.naturalHeight / ptxLogo.naturalWidth;
-        x.drawImage(ptxLogo, (W - lw) / 2, 58, lw, lh);
-        top = 58 + lh + 40;
+        var lw = 520, lh = lw * ptxLogo.naturalHeight / ptxLogo.naturalWidth;
+        x.drawImage(ptxLogo, (W - lw) / 2, 110, lw, lh);
+        top = 110 + lh + 90;
       }
       var name = (P.name + ' COUNTY PROPERTY TAXES').toUpperCase();
-      var fs = 68, nl;
+      var fs = 94, nl;
       x.font = '900 ' + fs + 'px Montserrat, sans-serif'; nl = ptxWrap(x, name, 920);
-      while (fs > 42 && nl.length > 2) { fs -= 3; x.font = '900 ' + fs + 'px Montserrat, sans-serif'; nl = ptxWrap(x, name, 920); }
+      while (fs > 58 && nl.length > 3) { fs -= 3; x.font = '900 ' + fs + 'px Montserrat, sans-serif'; nl = ptxWrap(x, name, 920); }
       x.textAlign = 'center'; x.fillStyle = '#13294b';
       for (var n = 0; n < nl.length; n++) x.fillText(nl[n], W / 2, top + fs * 0.92 + n * fs * 1.04);
       var barY = Math.round(top + fs * 0.92 + (nl.length - 1) * fs * 1.04 + fs * 0.52);
-      var barH = P.note ? 248 : 198;
-      x.fillStyle = '#13294b'; ptxRound(x, 70, barY, W - 140, barH, 10);
+      var barH = P.note ? 380 : 300;
+      x.fillStyle = '#13294b'; ptxRound(x, 70, barY, W - 140, barH, 14);
       var px = 112;
       x.textAlign = 'left';
-      x.fillStyle = '#ffffff'; x.font = '800 23px Montserrat, sans-serif';
-      x.fillText('NATIONAL RANK', px, barY + 54);
+      x.fillStyle = '#ffffff'; x.font = '800 33px Montserrat, sans-serif';
+      x.fillText('NATIONAL RANK', px, barY + 80);
       var rk = '#' + Number(P.rk).toLocaleString(), qual = 'of 3,136 counties';
-      x.font = '900 92px Montserrat, sans-serif'; var rw = x.measureText(rk).width;
-      x.fillStyle = '#ffffff'; x.fillText(rk, px, barY + 148);
-      x.fillStyle = '#ffffff'; x.font = '700 39px Montserrat, sans-serif';
-      x.fillText(qual, px + rw + 20, barY + 148);
+      x.font = '900 132px Montserrat, sans-serif'; var rw = x.measureText(rk).width;
+      x.fillStyle = '#ffffff'; x.fillText(rk, px, barY + 226);
+      x.fillStyle = '#ffffff'; x.font = '700 54px Montserrat, sans-serif';
+      x.fillText(qual, px + rw + 26, barY + 226);
       if (P.note) {
-        x.fillStyle = '#fe5f05'; x.font = '800 24px Montserrat, sans-serif';
-        x.fillText(String(P.note).toUpperCase(), px, barY + 202);
+        x.fillStyle = '#fe5f05'; x.font = '800 34px Montserrat, sans-serif';
+        x.fillText(String(P.note).toUpperCase(), px, barY + 310);
       }
-      var ry = barY + barH + 30;
-      var rows = [
-        ['EFFECTIVE TAX RATE', Number(P.rate).toFixed(2) + '%', '#fe5f05'],
-        ['MEDIAN HOME VALUE', ptxD(P.val), '#13294b'],
-        ['MEDIAN TAXES PAID', (P.tax == null ? 'Under $200' : ptxD(P.tax)), '#13294b']
+      var ry = barY + barH + 70;
+      x.textAlign = 'left'; x.fillStyle = '#484848'; x.font = '800 34px Montserrat, sans-serif';
+      x.fillText('EFFECTIVE TAX RATE VS. OTHER STATES', 80, ry + 8);
+      ry += 70;
+      var cmp = [
+        [String(P.name).toUpperCase() + ' CO., IL', Number(P.rate), '#fe5f05'],
+        ['WISCONSIN', 1.32, '#4a7bb5'],
+        ['MISSOURI', 0.89, '#4a7bb5'],
+        ['INDIANA', 0.76, '#4a7bb5']
       ];
-      for (var i = 0; i < rows.length; i++){
-        x.textAlign = 'left'; x.fillStyle = '#484848'; x.font = '800 24px Montserrat, sans-serif';
-        x.fillText(rows[i][0], 80, ry + 50);
-        x.textAlign = 'right'; x.fillStyle = rows[i][2]; x.font = '900 56px Montserrat, sans-serif';
-        x.fillText(rows[i][1], W - 80, ry + 58);
-        if (i < rows.length - 1) { x.fillStyle = '#e8ecf1'; x.fillRect(80, ry + 84, W - 160, 2); }
-        ry += 96;
+      var cmpMax = 0, ci;
+      for (ci = 0; ci < cmp.length; ci++) { if (cmp[ci][1] > cmpMax) cmpMax = cmp[ci][1]; }
+      var labW = 340, barX = 80 + labW, barMax = W - 80 - barX;
+      var rowH = Math.min(150, Math.max(80, ((H - 200) - ry) / cmp.length));
+      var barH2 = Math.round(rowH * 0.7);
+      for (ci = 0; ci < cmp.length; ci++){
+        var bw = Math.max(150, Math.round(barMax * cmp[ci][1] / cmpMax));
+        x.textAlign = 'left'; x.fillStyle = '#13294b';
+        var lfs = ptxFit(x, cmp[ci][0], labW - 20, '800', 36, 20);
+        x.font = '800 ' + lfs + 'px Montserrat, sans-serif';
+        x.fillText(cmp[ci][0], 80, ry + barH2 * 0.72);
+        x.fillStyle = cmp[ci][2]; ptxRound(x, barX, ry, bw, barH2, 6);
+        x.textAlign = 'right'; x.fillStyle = '#ffffff';
+        x.font = '900 ' + Math.round(barH2 * 0.62) + 'px Montserrat, sans-serif';
+        x.fillText(cmp[ci][1].toFixed(2) + '%', barX + bw - 14, ry + barH2 * 0.72);
+        ry += rowH;
       }
-      x.textAlign = 'center'; x.fillStyle = 'rgba(19,41,75,0.55)'; x.font = '600 21px Montserrat, sans-serif';
+      x.textAlign = 'center'; x.fillStyle = 'rgba(19,41,75,0.55)'; x.font = '600 30px Montserrat, sans-serif';
       var sl = ptxWrap(x, P.source || PTX_SRC_DEFAULT, 900);
-      var sy = H - 44 - (sl.length - 1) * 27;
-      for (var k = 0; k < sl.length; k++) x.fillText(sl[k], W / 2, sy + k * 27);
-      x.fillStyle = '#fe5f05'; x.font = '700 25px Montserrat, sans-serif';
-      x.fillText('FightForIllinois.org', W / 2, sy - 34);
+      var sy = H - 70 - (sl.length - 1) * 38;
+      for (var k = 0; k < sl.length; k++) x.fillText(sl[k], W / 2, sy + k * 38);
+      x.fillStyle = '#fe5f05'; x.font = '700 34px Montserrat, sans-serif';
+      x.fillText('FightForIllinois.org', W / 2, sy - 48);
       cv.toBlob(cb, 'image/png');
     }
   }
@@ -386,7 +547,7 @@
     return b;
   }
 
-  // Payload keys: pre, num, label, only, title, rows, bubble, rank, rankOf, source, svgStr, duo
+  // Payload keys: pre, num, label, only, title, rows, bubble, rank, rankOf, source, svgStr, duo, hed, trend
   function renderCard(opts){
     hed.textContent = 'Share this stat';
     if (opts.svgStr) {
@@ -439,7 +600,10 @@
     if (name === 'state') { show(STATE); return; }
     fetch(DATA_URL).then(function(r){ return r.json(); }).then(function(list){
       var dd = null;
-      for (var i = 0; i < list.length; i++) { if (list[i].n === name) { dd = list[i]; break; } }
+      var _dec = document.createElement('textarea');
+      var _plain = function(s){ if (typeof s !== 'string' || s.indexOf('\u0026') < 0) return s; _dec.innerHTML = s; return _dec.value; };
+      var _want = _plain(name);
+      for (var i = 0; i < list.length; i++) { if (list[i].n === name || _plain(list[i].n) === _want) { dd = list[i]; break; } }
       if (!dd) { hed.textContent = 'District not found'; hint.textContent = name; return; }
       show(dd);
     }).catch(function(){ hed.textContent = 'Data failed to load'; });
