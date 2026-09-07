@@ -411,11 +411,11 @@
   var ptxLogo = null;
   function ptxD(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
   function ptxLogoReady(cb){
-    if (ptxLogo || !(window.FFI_PTX_LOGO || window.FFI_OP_LOGO)) { cb(); return; }
+    if (ptxLogo || !(window.FFI_PTX_LOGO || window.FFI_CARD_LOGO || window.FFI_OP_LOGO)) { cb(); return; }
     var im = new Image();
     im.onload = function(){ ptxLogo = im; cb(); };
     im.onerror = function(){ cb(); };
-    im.src = window.FFI_PTX_LOGO || window.FFI_OP_LOGO;
+    im.src = window.FFI_PTX_LOGO || window.FFI_CARD_LOGO || window.FFI_OP_LOGO;
   }
   function ptxFit(x, text, max, weight, start, min){
     var s = start;
@@ -519,6 +519,9 @@
   }
     window.FFI_PTX_DRAW = ptxDraw;
     window.FFI_makeCard = makeCard;
+    /* Expose the card logo (navy on white) so the property-tax card can use
+       the very same asset the schools cards do — no extra file to host. */
+    window.FFI_CARD_LOGO = logoImg.src;
   })();
 
   var DATA_URL = window.FFI_DATA_URL || 'https://klingnerjohn.github.io/ilschooldistrictcards/fight-districts-2024.json';
