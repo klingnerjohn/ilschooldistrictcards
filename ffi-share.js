@@ -142,6 +142,42 @@
             }
             x.textAlign = 'center';
             var y = 250;
+            if (opts.duo) {
+              var D = opts.duo;
+              var logoBottom = logoImg.naturalWidth ? 70 + 440 * logoImg.naturalHeight / logoImg.naturalWidth : 210;
+              var preY = logoBottom + 62;
+              if (opts.pre) { x.fillStyle = '#fe5f05'; x.font = "800 34px Montserrat, sans-serif"; x.fillText(String(opts.pre).toUpperCase(), W/2, preY); }
+              var hedTxt = D.hed || 'Students can\u2019t read or do math at grade level';
+              x.fillStyle = '#13294b';
+              var hs = 62; x.font = "900 " + hs + "px Montserrat, sans-serif";
+              var hl = wrapText(x, hedTxt, 900);
+              while (hl.length > 2 && hs > 40) { hs -= 4; x.font = "900 " + hs + "px Montserrat, sans-serif"; hl = wrapText(x, hedTxt, 900); }
+              var hy = preY + 92;
+              for (var hi = 0; hi < hl.length; hi++) { x.fillText(hl[hi], W/2, hy); hy += hs * 1.12; }
+              var dTop = 452, dBot = 872;
+              x.fillStyle = '#fe5f05'; x.fillRect(W/2 - 2, dTop, 4, dBot - dTop);
+              var panels = [
+                { cx: 285, subj: 'READING', num: D.r, only: D.ro },
+                { cx: 795, subj: 'MATH', num: D.m, only: D.mo }
+              ];
+              for (var pi = 0; pi < 2; pi++) {
+                var p = panels[pi];
+                x.fillStyle = '#13294b'; x.font = "900 48px Montserrat, sans-serif";
+                x.fillText(p.subj, p.cx, dTop + 56);
+                if (p.only) { x.fillStyle = '#13294b'; x.font = "700 40px Montserrat, sans-serif"; x.fillText(p.only, p.cx, dTop + 124); }
+                var ns = 170; x.font = "900 " + ns + "px Montserrat, sans-serif";
+                while (ns > 90 && x.measureText(String(p.num)).width > 420) { ns -= 6; x.font = "900 " + ns + "px Montserrat, sans-serif"; }
+                x.fillStyle = '#fe5f05'; x.fillText(String(p.num), p.cx, dTop + 272);
+                x.fillStyle = '#13294b'; x.font = "700 32px Montserrat, sans-serif";
+                var cl = wrapText(x, D.cap || 'of all students are proficient', 400);
+                var cy = dTop + 336;
+                for (var ci2 = 0; ci2 < cl.length; ci2++) { x.fillText(cl[ci2], p.cx, cy); cy += 42; }
+              }
+              x.fillStyle = 'rgba(19,41,75,0.55)'; x.font = "600 30px Montserrat, sans-serif";
+              x.fillText(D.src || 'Source: ISBE Illinois Report Card, 2024', W/2, H - 64);
+              c.toBlob(cb, 'image/png');
+              return;
+            }
             if (iconImg && iconImg.width) {
               var ih = 130, iw = ih * iconImg.width / iconImg.height;
               x.drawImage(iconImg, (W-iw)/2, y, iw, ih);
@@ -193,6 +229,17 @@
                 x.fillText(l2, W/2, cy + fs * 0.58);
                 x.textBaseline = 'alphabetic';
               }
+            } else if (opts.rank) {
+              x.fillStyle = '#fe5f05'; x.font = "900 250px Montserrat, sans-serif";
+              x.fillText(String(opts.rank), W/2, y + 250);
+              if (opts.rankOf) {
+                x.fillStyle = 'rgba(19,41,75,0.6)'; x.font = "700 44px Montserrat, sans-serif";
+                x.fillText(opts.rankOf, W/2, y + 320);
+              }
+              x.fillStyle = '#13294b'; x.font = "700 54px Montserrat, sans-serif";
+              var rl = wrapText(x, opts.label || '', 880);
+              var rly = y + (opts.rankOf ? 410 : 360);
+              rl.forEach(function(l){ x.fillText(l, W/2, rly); rly += 72; });
             } else {
               if (opts.only) {
                 x.fillStyle = '#13294b'; x.font = "700 66px Montserrat, sans-serif";
@@ -207,11 +254,109 @@
               lines.forEach(function(l){ x.fillText(l, W/2, ly); ly += 72; });
             }
             x.fillStyle = 'rgba(19,41,75,0.55)'; x.font = "600 30px Montserrat, sans-serif";
-            x.fillText('Source: ISBE Illinois Report Card, 2024', W/2, H-64);
+            x.fillText(opts.source || 'Source: ISBE Illinois Report Card, 2024', W/2, H-64);
             c.toBlob(cb, 'image/png');
           });
         }
 
+  var PTX_SRC_DEFAULT = 'Source: Tax Foundation, Property Taxes by State and County, 2026 (2024 data)';
+  var ptxLogo = null;
+  function ptxD(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+  function ptxLogoReady(cb){
+    if (ptxLogo || !(window.FFI_PTX_LOGO || window.FFI_OP_LOGO)) { cb(); return; }
+    var im = new Image();
+    im.onload = function(){ ptxLogo = im; cb(); };
+    im.onerror = function(){ cb(); };
+    im.src = window.FFI_PTX_LOGO || window.FFI_OP_LOGO;
+  }
+  function ptxFit(x, text, max, weight, start, min){
+    var s = start;
+    x.font = weight + ' ' + s + 'px Montserrat, sans-serif';
+    while (s > min && x.measureText(text).width > max) { s -= 2; x.font = weight + ' ' + s + 'px Montserrat, sans-serif'; }
+    return s;
+  }
+  function ptxWrap(x, text, max){
+    var w = String(text).split(' '), lines = [], cur = '';
+    for (var i = 0; i < w.length; i++){
+      var t = cur ? cur + ' ' + w[i] : w[i];
+      if (x.measureText(t).width > max && cur) { lines.push(cur); cur = w[i]; } else { cur = t; }
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+  function ptxRound(x, rx, ry, rw, rh, r){
+    x.beginPath();
+    x.moveTo(rx + r, ry);
+    x.lineTo(rx + rw - r, ry); x.quadraticCurveTo(rx + rw, ry, rx + rw, ry + r);
+    x.lineTo(rx + rw, ry + rh - r); x.quadraticCurveTo(rx + rw, ry + rh, rx + rw - r, ry + rh);
+    x.lineTo(rx + r, ry + rh); x.quadraticCurveTo(rx, ry + rh, rx, ry + rh - r);
+    x.lineTo(rx, ry + r); x.quadraticCurveTo(rx, ry, rx + r, ry);
+    x.closePath(); x.fill();
+  }
+  function ptxDraw(P, cb){
+    var ready = (document.fonts && document.fonts.load)
+      ? Promise.all([document.fonts.load('900 90px Montserrat'), document.fonts.load('800 30px Montserrat'), document.fonts.load('700 30px Montserrat')])['catch'](function(){})
+      : Promise.resolve();
+    Promise.race([ready, new Promise(function(res){ setTimeout(res, 1200); })]).then(function(){ ptxLogoReady(draw); });
+    function draw(){
+      var W = 1080, H = 1080;
+      var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+      var x = cv.getContext('2d');
+      x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
+      x.fillStyle = '#fe5f05'; x.fillRect(0, 0, W, 16); x.fillRect(0, H - 16, W, 16);
+      x.textAlign = 'center';
+      var top = 92;
+      if (ptxLogo && ptxLogo.naturalWidth) {
+        var lw = 380, lh = lw * ptxLogo.naturalHeight / ptxLogo.naturalWidth;
+        x.drawImage(ptxLogo, (W - lw) / 2, 58, lw, lh);
+        top = 58 + lh + 40;
+      }
+      var name = (P.name + ' COUNTY PROPERTY TAXES').toUpperCase();
+      var fs = 68, nl;
+      x.font = '900 ' + fs + 'px Montserrat, sans-serif'; nl = ptxWrap(x, name, 920);
+      while (fs > 42 && nl.length > 2) { fs -= 3; x.font = '900 ' + fs + 'px Montserrat, sans-serif'; nl = ptxWrap(x, name, 920); }
+      x.textAlign = 'center'; x.fillStyle = '#13294b';
+      for (var n = 0; n < nl.length; n++) x.fillText(nl[n], W / 2, top + fs * 0.92 + n * fs * 1.04);
+      var barY = Math.round(top + fs * 0.92 + (nl.length - 1) * fs * 1.04 + fs * 0.52);
+      var barH = P.note ? 248 : 198;
+      x.fillStyle = '#13294b'; ptxRound(x, 70, barY, W - 140, barH, 10);
+      var px = 112;
+      x.textAlign = 'left';
+      x.fillStyle = '#ffffff'; x.font = '800 23px Montserrat, sans-serif';
+      x.fillText('NATIONAL RANK', px, barY + 54);
+      var rk = '#' + Number(P.rk).toLocaleString(), qual = 'of 3,136 counties';
+      x.font = '900 92px Montserrat, sans-serif'; var rw = x.measureText(rk).width;
+      x.fillStyle = '#ffffff'; x.fillText(rk, px, barY + 148);
+      x.fillStyle = '#ffffff'; x.font = '700 39px Montserrat, sans-serif';
+      x.fillText(qual, px + rw + 20, barY + 148);
+      if (P.note) {
+        x.fillStyle = '#fe5f05'; x.font = '800 24px Montserrat, sans-serif';
+        x.fillText(String(P.note).toUpperCase(), px, barY + 202);
+      }
+      var ry = barY + barH + 30;
+      var rows = [
+        ['EFFECTIVE TAX RATE', Number(P.rate).toFixed(2) + '%', '#fe5f05'],
+        ['MEDIAN HOME VALUE', ptxD(P.val), '#13294b'],
+        ['MEDIAN TAXES PAID', (P.tax == null ? 'Under $200' : ptxD(P.tax)), '#13294b']
+      ];
+      for (var i = 0; i < rows.length; i++){
+        x.textAlign = 'left'; x.fillStyle = '#484848'; x.font = '800 24px Montserrat, sans-serif';
+        x.fillText(rows[i][0], 80, ry + 50);
+        x.textAlign = 'right'; x.fillStyle = rows[i][2]; x.font = '900 56px Montserrat, sans-serif';
+        x.fillText(rows[i][1], W - 80, ry + 58);
+        if (i < rows.length - 1) { x.fillStyle = '#e8ecf1'; x.fillRect(80, ry + 84, W - 160, 2); }
+        ry += 96;
+      }
+      x.textAlign = 'center'; x.fillStyle = 'rgba(19,41,75,0.55)'; x.font = '600 21px Montserrat, sans-serif';
+      var sl = ptxWrap(x, P.source || PTX_SRC_DEFAULT, 900);
+      var sy = H - 44 - (sl.length - 1) * 27;
+      for (var k = 0; k < sl.length; k++) x.fillText(sl[k], W / 2, sy + k * 27);
+      x.fillStyle = '#fe5f05'; x.font = '700 25px Montserrat, sans-serif';
+      x.fillText('FightForIllinois.org', W / 2, sy - 34);
+      cv.toBlob(cb, 'image/png');
+    }
+  }
+    window.FFI_PTX_DRAW = ptxDraw;
     window.FFI_makeCard = makeCard;
   })();
 
@@ -241,6 +386,7 @@
     return b;
   }
 
+  // Payload keys: pre, num, label, only, title, rows, bubble, rank, rankOf, source, svgStr, duo
   function renderCard(opts){
     hed.textContent = 'Share this stat';
     if (opts.svgStr) {
@@ -248,7 +394,8 @@
       d.innerHTML = opts.svgStr;
       opts.svg = d.firstElementChild;
     }
-    window.FFI_makeCard(opts, function(blob){
+    var builder = (opts.t === 'ptx' && window.FFI_PTX_DRAW) ? window.FFI_PTX_DRAW : window.FFI_makeCard;
+    builder(opts, function(blob){
       if (!blob) { hed.textContent = 'Card could not be created'; return; }
       var url = URL.createObjectURL(blob);
       var img = document.createElement('img');
