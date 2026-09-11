@@ -64,7 +64,63 @@
 
   /* Share a finished card in one tap. Order: the Fight for Illinois app, then
      the phone browser's share sheet, then a download, then the share page. */
+  /* Show the finished card and let the user confirm before the share sheet opens.
+     The Share button runs in its own tap, so the native share still works. */
   function shareCard(blob, opts){
+    opts = opts || {};
+    if (window.FFI_SHARE_PREVIEW === false) { shareNow(blob, opts); return; }
+    var old = document.getElementById('ffi-share-preview');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    var url = null;
+    try { url = URL.createObjectURL(blob); } catch (e) {}
+    var ov = document.createElement('div');
+    ov.id = 'ffi-share-preview';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-label', 'Preview your card before sharing');
+    ov.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;z-index:100000;background:rgba(19,41,75,0.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;font-family:Montserrat,sans-serif;-webkit-tap-highlight-color:transparent;';
+    var img = document.createElement('img');
+    img.alt = 'Your Fight for Illinois card';
+    if (url) img.src = url;
+    img.style.cssText = 'max-width:min(420px,86vw);max-height:56vh;width:auto;height:auto;border-radius:10px;box-shadow:0 18px 50px rgba(0,0,0,0.45);background:#fff;';
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center;';
+    function mk(label, primary){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = label;
+      b.style.cssText = 'font-family:Montserrat,sans-serif;font-weight:800;font-size:15px;letter-spacing:0.03em;text-transform:uppercase;border-radius:6px;padding:14px 26px;min-height:48px;cursor:pointer;border:2px solid ' + (primary ? '#fe5f05' : 'rgba(255,255,255,0.7)') + ';background:' + (primary ? '#fe5f05' : 'transparent') + ';color:#fff;';
+      return b;
+    }
+    var shareBtn = mk('Share', true);
+    var saveBtn = mk('Save image', false);
+    var cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.style.cssText = 'font-family:Montserrat,sans-serif;font-weight:700;font-size:14px;background:none;border:0;color:rgba(255,255,255,0.8);text-decoration:underline;padding:10px 14px;min-height:44px;cursor:pointer;';
+    function onKey(e){ if (e.key === 'Escape' || e.keyCode === 27) close(); }
+    function close(){
+      document.removeEventListener('keydown', onKey);
+      if (ov.parentNode) ov.parentNode.removeChild(ov);
+      if (url) setTimeout(function(){ try { URL.revokeObjectURL(url); } catch (e) {} }, 1500);
+    }
+    shareBtn.addEventListener('click', function(){ close(); shareNow(blob, opts); });
+    saveBtn.addEventListener('click', function(){
+      close();
+      shareNow(blob, { filename: opts.filename, title: opts.title, fallbackUrl: opts.fallbackUrl, mode: 'download' });
+    });
+    cancelBtn.addEventListener('click', close);
+    ov.addEventListener('click', function(e){ if (e.target === ov) close(); });
+    document.addEventListener('keydown', onKey);
+    row.appendChild(shareBtn);
+    row.appendChild(saveBtn);
+    ov.appendChild(img);
+    ov.appendChild(row);
+    ov.appendChild(cancelBtn);
+    document.body.appendChild(ov);
+    try { shareBtn.focus(); } catch (e) {}
+  }
+  function shareNow(blob, opts){
     opts = opts || {};
     var name = opts.filename || 'fight-for-illinois.png';
     var title = opts.title || 'Fight for Illinois';
@@ -116,6 +172,7 @@
       });
       return;
     }
+    if (opts.mode === 'download') { download(); return; }
     if (file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
       navigator.share({ files: [file], title: title })['catch'](function(err){
         if (!err || err.name !== 'AbortError') download();
