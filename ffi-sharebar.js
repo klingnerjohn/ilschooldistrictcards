@@ -24,6 +24,9 @@
      data-share-rank-of  qualifier under a rank ("of 3,136 counties")
      data-share-title    headline for table cards
      data-share-rows     JSON array of rows, e.g. '[["2010","$13,219"],["2024","$23,718"]]'
+     data-share-bars     JSON array of [label, value] pairs drawn as a bar chart,
+                         e.g. '[["2019","$17,607"],["2025","$25,646"]]' (last bar orange)
+     data-share-hed      headline for bar cards
      data-share-bubble   change circle, e.g. "Up 79%"
      data-share-contrast a rebuttal line under the caption, e.g. "...yet only 39% read at grade level."
      data-share-source   source line printed at the bottom of the card
@@ -44,6 +47,8 @@
     var g = function(k){ return btn.getAttribute('data-share-' + k) || ''; };
     var rows = null;
     try { rows = g('rows') ? JSON.parse(g('rows')) : null; } catch(e){}
+    var bars = null;
+    try { bars = g('bars') ? JSON.parse(g('bars')) : null; } catch(e){}
     var svgStr = '';
     var sel = g('icon');
     if (sel) {
@@ -53,7 +58,7 @@
     var p = {
       pre: g('pre'), num: g('num'), only: g('only'), label: g('label'),
       rank: g('rank'), rankOf: g('rank-of'), title: g('title'),
-      rows: rows, bubble: g('bubble'), contrast: g('contrast'), source: g('source'), svgStr: svgStr
+      rows: rows, bars: bars, hed: g('hed'), bubble: g('bubble'), contrast: g('contrast'), source: g('source'), svgStr: svgStr
     };
     if (typeof window.FFI_SHARE_RESOLVE === 'function') {
       p = window.FFI_SHARE_RESOLVE(btn, p) || p;
@@ -118,6 +123,23 @@
     ov.appendChild(row);
     ov.appendChild(cancelBtn);
     document.body.appendChild(ov);
+    /* Android Chrome may not composite the new fixed layer until the next input
+       event - the card would appear only after the user scrolls. Force frames. */
+    function kick(){
+      ov.style.transform = 'translateZ(0)';
+      void ov.offsetHeight;
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(function(){
+          ov.style.opacity = '0.999';
+          void ov.offsetHeight;
+          requestAnimationFrame(function(){ ov.style.opacity = ''; ov.style.transform = ''; });
+        });
+      }
+    }
+    kick();
+    if (!img.complete) { img.addEventListener('load', kick); img.addEventListener('error', kick); }
+    setTimeout(kick, 60);
+    setTimeout(kick, 240);
     try { shareBtn.focus(); } catch (e) {}
   }
   function shareNow(blob, opts){
