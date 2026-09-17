@@ -55,11 +55,19 @@
       var el = document.querySelector(sel);
       if (el) { try { svgStr = new XMLSerializer().serializeToString(el); } catch(e){} }
     }
+    var tbl = null, cols = null, colhd = null, delta = null;
+    try { tbl = g('tbl') ? JSON.parse(g('tbl')) : null; } catch(e){}
+    try { cols = g('cols') ? JSON.parse(g('cols')) : null; } catch(e){}
+    try { colhd = g('colhd') ? JSON.parse(g('colhd')) : null; } catch(e){}
+    try { delta = g('delta') ? JSON.parse(g('delta')) : null; } catch(e){}
     var p = {
       pre: g('pre'), num: g('num'), only: g('only'), label: g('label'),
-      rank: g('rank'), rankOf: g('rank-of'), title: g('title'),
-      rows: rows, bars: bars, hed: g('hed'), bubble: g('bubble'), contrast: g('contrast'), source: g('source'), svgStr: svgStr
+      rank: g('rank'), rankOf: g('rank-of'), title: g('title'), sub: g('sub'),
+      rows: rows, bars: bars, hed: g('hed'), bubble: g('bubble'), contrast: g('contrast'), source: g('source'), svgStr: svgStr,
+      tbl: tbl, cols: cols, colhd: colhd, delta: delta
     };
+    if (g('valorange')) p.val_orange = true;
+    if (g('subbig')) p.sub_big = true;
     if (typeof window.FFI_SHARE_RESOLVE === 'function') {
       p = window.FFI_SHARE_RESOLVE(btn, p) || p;
     }

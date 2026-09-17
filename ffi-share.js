@@ -157,6 +157,117 @@
             }
             x.textAlign = 'center';
             var y = 250;
+            if (opts.bars) {
+              var B = opts.bars;
+              var bNum = function(s){ var v = parseFloat(String(s).replace(/[^0-9.\-]/g, '')); return isNaN(v) ? 0 : v; };
+              var bPill = function(px, py, pw, ph, pr){
+                x.beginPath();
+                x.moveTo(px + pr, py);
+                x.lineTo(px + pw - pr, py);
+                x.arcTo(px + pw, py, px + pw, py + pr, pr);
+                x.lineTo(px + pw, py + ph - pr);
+                x.arcTo(px + pw, py + ph, px + pw - pr, py + ph, pr);
+                x.lineTo(px + pr, py + ph);
+                x.arcTo(px, py + ph, px, py + ph - pr, pr);
+                x.lineTo(px, py + pr);
+                x.arcTo(px, py, px + pr, py, pr);
+                x.closePath();
+                x.fill();
+              };
+              var bLogo = logoImg.naturalWidth ? 120 + 520 * logoImg.naturalHeight / logoImg.naturalWidth : 300;
+              var by = bLogo + 130;
+              if (opts.pre) {
+                var bpfs = 64; x.font = "800 " + bpfs + "px Montserrat, sans-serif";
+                var bpTxt = String(opts.pre).toUpperCase();
+                var bpl = wrapText(x, bpTxt, 940);
+                while (bpl.length > 2 && bpfs > 44) { bpfs -= 3; x.font = "800 " + bpfs + "px Montserrat, sans-serif"; bpl = wrapText(x, bpTxt, 940); }
+                x.fillStyle = '#fe5f05';
+                for (var bpi = 0; bpi < bpl.length; bpi++) { x.fillText(bpl[bpi], W/2, by + bpi * (bpfs + 10)); }
+                by += (bpl.length - 1) * (bpfs + 10) + 16;
+              }
+              var bhy = by;
+              var bhTxt = opts.hed || opts.title || '';
+              if (bhTxt) {
+                x.fillStyle = '#13294b';
+                var bhs = 94; x.font = "900 " + bhs + "px Montserrat, sans-serif";
+                var bhl = wrapText(x, bhTxt, 960);
+                while (bhl.length > 3 && bhs > 58) { bhs -= 4; x.font = "900 " + bhs + "px Montserrat, sans-serif"; bhl = wrapText(x, bhTxt, 960); }
+                bhy = by + 112;
+                for (var bhi = 0; bhi < bhl.length; bhi++) { x.fillText(bhl[bhi], W/2, bhy); bhy += bhs * 1.12; }
+                bhy -= bhs * 0.34;
+              }
+              var bSrcY = H - 96;
+              var bcFS = 48, bcLH = 62, bcl = [];
+              if (opts.label) {
+                x.font = "700 " + bcFS + "px Montserrat, sans-serif";
+                bcl = wrapText(x, String(opts.label), 900);
+                while (bcl.length > 3 && bcFS > 38) { bcFS -= 2; bcLH -= 3; x.font = "700 " + bcFS + "px Montserrat, sans-serif"; bcl = wrapText(x, String(opts.label), 900); }
+              }
+              var bBub = opts.bubble ? String(opts.bubble).toUpperCase() : '';
+              var bPillH = bBub ? 108 : 0, bPillGap = bBub ? 46 : 0;
+              var bCapH = bcl.length ? bcl.length * bcLH + 36 : 0;
+              var bYearH = 96;
+              var bBase = bSrcY - 96 - bCapH - bPillH - bPillGap - bYearH;
+              var bTop = bhy + 50;
+              var bMaxH = bBase - bTop - 104;
+              if (bMaxH > 620) { bTop += (bMaxH - 620) / 2; bMaxH = 620; }
+              if (bMaxH < 240) bMaxH = 240;
+              var bN = B.length;
+              var bW = Math.min(250, Math.floor((820 - (bN - 1) * 110) / bN));
+              var bGap = bN > 2 ? 110 : 170;
+              var bSpan = bN * bW + (bN - 1) * bGap;
+              var bLeft = (W - bSpan) / 2;
+              var bPeak = 0, bi2;
+              for (bi2 = 0; bi2 < bN; bi2++) { bPeak = Math.max(bPeak, bNum(B[bi2][1])); }
+              if (!bPeak) bPeak = 1;
+              var bvFS = 78;
+              x.font = "900 " + bvFS + "px Montserrat, sans-serif";
+              var bFits = function(fsz){
+                var k; x.font = "900 " + fsz + "px Montserrat, sans-serif";
+                for (k = 0; k < bN; k++) { if (x.measureText(String(B[k][1])).width > bW + 56) return false; }
+                return true;
+              };
+              while (bvFS > 34 && !bFits(bvFS)) bvFS -= 2;
+              x.fillStyle = 'rgba(19,41,75,0.16)';
+              x.fillRect(bLeft - 50, bBase, bSpan + 100, 5);
+              for (bi2 = 0; bi2 < bN; bi2++) {
+                var bcx = bLeft + bi2 * (bW + bGap) + bW / 2;
+                var bh = Math.max(14, bMaxH * bNum(B[bi2][1]) / bPeak);
+                var bcol = bi2 === bN - 1 ? '#fe5f05' : '#13294b';
+                x.fillStyle = bcol;
+                x.fillRect(bcx - bW / 2, bBase - bh, bW, bh);
+                x.textAlign = 'center';
+                x.font = "900 " + bvFS + "px Montserrat, sans-serif";
+                x.fillText(String(B[bi2][1]), bcx, bBase - bh - 36);
+                x.fillStyle = '#13294b';
+                x.font = "700 56px Montserrat, sans-serif";
+                x.fillText(String(B[bi2][0]), bcx, bBase + 78);
+              }
+              var bBelow = bBase + bYearH;
+              if (bBub) {
+                var bbFS = 58;
+                x.font = "900 " + bbFS + "px Montserrat, sans-serif";
+                while (bbFS > 34 && x.measureText(bBub).width > 800) { bbFS -= 2; x.font = "900 " + bbFS + "px Montserrat, sans-serif"; }
+                var bbW = x.measureText(bBub).width + 120;
+                x.fillStyle = '#fe5f05';
+                bPill((W - bbW) / 2, bBelow + bPillGap, bbW, bPillH, bPillH / 2);
+                x.fillStyle = '#ffffff';
+                x.textBaseline = 'middle';
+                x.fillText(bBub, W / 2, bBelow + bPillGap + bPillH / 2 + 3);
+                x.textBaseline = 'alphabetic';
+                bBelow += bPillGap + bPillH;
+              }
+              if (bcl.length) {
+                x.fillStyle = '#13294b';
+                x.font = "700 " + bcFS + "px Montserrat, sans-serif";
+                var bcy = bBelow + 76;
+                for (var bci = 0; bci < bcl.length; bci++) { x.fillText(bcl[bci], W / 2, bcy); bcy += bcLH; }
+              }
+              x.fillStyle = 'rgba(19,41,75,0.55)'; x.font = "600 40px Montserrat, sans-serif";
+              x.fillText(opts.source || '', W / 2, bSrcY);
+              c.toBlob(cb, 'image/png');
+              return;
+            }
             if (opts.trend) {
               var T = opts.trend;
               var lb = logoImg.naturalWidth ? 120 + 520 * logoImg.naturalHeight / logoImg.naturalWidth : 300;
@@ -178,11 +289,11 @@
               for (var thi = 0; thi < thl.length; thi++) { x.fillText(thl[thi], W/2, thy); thy += ths * 1.12; }
               var tSrcY = H - 96;
               var tTop = thy + 44;
-              var tAvail = tSrcY - 90 - tTop;
-              var tK = tAvail / 700;
+              var tAvail = tSrcY - 110 - tTop;
+              var tK = tAvail / 760;
               if (tK > 1.32) tK = 1.32;
               if (tK < 0.6) tK = 0.6;
-              var tBubCy = 540 * tK, tBubR = 130 * tK, tBlock = tBubCy + tBubR + 16;
+              var tBubCy = 592 * tK, tBubR = 130 * tK, tBlock = tBubCy + tBubR + 16;
               var tTitleY = 80 * tK, tRow1 = 258 * tK, tRowStep = 142 * tK;
               tTop += Math.max(0, (tAvail - tBlock) / 2);
               x.fillStyle = '#fe5f05'; x.fillRect(W/2 - 2, tTop, 4, tBlock);
@@ -269,7 +380,7 @@
                 if (capLines[li].length > maxLines) maxLines = capLines[li].length;
               }
               var blockH = capTop + (maxLines - 1) * capLH + duoOff;
-              var dTop = hy + 44, maxTop = srcY - 130 - blockH;
+              var dTop = hy + 44, maxTop = srcY - 150 - blockH;
               while (maxTop < dTop && capFS > 42) {
                 capFS -= 2; capLH -= 3;
                 x.font = "700 " + capFS + "px Montserrat, sans-serif";
@@ -279,7 +390,7 @@
                   if (capLines[li].length > maxLines) maxLines = capLines[li].length;
                 }
                 blockH = capTop + (maxLines - 1) * capLH + duoOff;
-                maxTop = srcY - 130 - blockH;
+                maxTop = srcY - 150 - blockH;
               }
               if (dTop > maxTop) dTop = maxTop;
               var dBot = dTop + blockH + 14;
@@ -336,7 +447,7 @@
               x.fillText(opts.title.toUpperCase(), W/2, ty);
               var rows = opts.rows;
               var rowsStart = ty + 100;
-              var bottomLimit = opts.bubble ? H - 520 : H - 150;
+              var bottomLimit = opts.bubble ? H - 540 : H - 170;
               var rowH = opts.bubble ? 120 : Math.min(230, (bottomLimit - rowsStart) / rows.length);
               var fsCap = Math.round(((bottomLimit - rowsStart) / 6) * 0.62);
               var cellFS = opts.bubble ? Math.round(rowH * 0.52) : Math.min(fsCap, Math.round(rowH * 0.7));
@@ -409,7 +520,7 @@
               }
               var srcBase = H - 96;
               var numFS = opts.contrast ? 236 : 320, labFS = 74, labLH = 98;
-              var availTop = opts.only ? y + 150 : y + 40, availBot = srcBase - 70;
+              var availTop = opts.only ? y + 150 : y + 40, availBot = srcBase - 90;
               x.font = "700 " + labFS + "px Montserrat, sans-serif";
               var lines = wrapText(x, opts.label, 920);
               var cfs = 64, clh = 80, clines = [];
@@ -687,4 +798,632 @@
     hed.textContent = 'Nothing to share yet';
     hint.textContent = 'Open a stat on FightForIllinois.org and tap Share.';
   }
+})();
+
+/* ---------------------------------------------------------------
+   Card painters added 2026-09: table, change-since, three-column
+   and single-number cards. Wraps whatever FFI_makeCard already is,
+   so older payload shapes keep working untouched.
+   Payload keys: tbl, cols + colhd, delta, sub, sub_big, val_orange.
+   --------------------------------------------------------------- */
+(function(){
+  var W = 1080, H = 1920;
+  function wrap(x, text, max){
+    var w = String(text).split(' '), lines = [], cur = '', i, t;
+    for (i = 0; i < w.length; i++) {
+      t = cur ? cur + ' ' + w[i] : w[i];
+      if (x.measureText(t).width > max && cur) { lines.push(cur); cur = w[i]; } else { cur = t; }
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  }
+  function round(x, rx, ry, rw, rh, r){
+    x.beginPath();
+    x.moveTo(rx + r, ry);
+    x.lineTo(rx + rw - r, ry); x.quadraticCurveTo(rx + rw, ry, rx + rw, ry + r);
+    x.lineTo(rx + rw, ry + rh - r); x.quadraticCurveTo(rx + rw, ry + rh, rx + rw - r, ry + rh);
+    x.lineTo(rx + r, ry + rh); x.quadraticCurveTo(rx, ry + rh, rx, ry + rh - r);
+    x.lineTo(rx, ry + r); x.quadraticCurveTo(rx, ry, rx + r, ry);
+    x.closePath(); x.fill();
+  }
+  function paint(o, logo, cb){
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var x = c.getContext('2d');
+    x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
+    x.fillStyle = '#fe5f05'; x.fillRect(0, 0, W, 20); x.fillRect(0, H - 20, W, 20);
+    x.textAlign = 'center';
+    var top = 300;
+    if (logo && logo.naturalWidth) {
+      var lw = 520, lh = lw * logo.naturalHeight / logo.naturalWidth;
+      x.drawImage(logo, (W - lw) / 2, 110, lw, lh);
+      top = 110 + lh + 130;
+    }
+    if (o.title) {
+      x.fillStyle = '#13294b';
+      var tfs = 68, tl;
+      x.font = '900 ' + tfs + 'px Montserrat, sans-serif';
+      tl = wrap(x, String(o.title).toUpperCase(), 900);
+      while (tl.length > 3 && tfs > 44) {
+        tfs -= 3; x.font = '900 ' + tfs + 'px Montserrat, sans-serif';
+        tl = wrap(x, String(o.title).toUpperCase(), 900);
+      }
+      for (var ti = 0; ti < tl.length; ti++) { x.fillText(tl[ti], W / 2, top + tfs * 0.86); top += tfs * 1.08; }
+      if (o.sub) {
+        top += 16;
+        var sb_fs = o.sub_big ? 76 : 38;
+        x.fillStyle = o.sub_big ? '#fe5f05' : 'rgba(19,41,75,0.62)';
+        x.font = (o.sub_big ? '900 ' : '700 ') + sb_fs + 'px Montserrat, sans-serif';
+        var sbl = wrap(x, String(o.sub), 900);
+        while (o.sub_big && sbl.length > 2 && sb_fs > 46) {
+          sb_fs -= 4; x.font = '900 ' + sb_fs + 'px Montserrat, sans-serif';
+          sbl = wrap(x, String(o.sub), 900);
+        }
+        for (var sbi = 0; sbi < sbl.length; sbi++) { x.fillText(sbl[sbi], W / 2, top + sb_fs * 0.82); top += sb_fs * 1.12; }
+      }
+      top += 46;
+    }
+    var T = o.tbl, n = T.length, i;
+    var has_sub = false;
+    for (i = 0; i < n; i++) if (T[i][4]) has_sub = true;
+    var row_h = Math.min(has_sub ? 150 : 118, (H - 240 - top) / n);
+    /* center short tables */
+    top += Math.max(0, ((H - 240 - top) - n * row_h) / 2);
+    var fs = Math.min(50, Math.round(row_h * (has_sub ? 0.34 : 0.46)));
+    var has_rank = false;
+    for (i = 0; i < n; i++) if (String(T[i][0] || '') !== '') has_rank = true;
+    var has_ext = false;
+    for (i = 0; i < n; i++) if (T[i][5]) has_ext = true;
+    var rk_r = has_ext ? 110 : 148;
+    var vl_r = has_ext ? 360 : (has_rank ? 430 : 330);
+    var nm_l = has_ext ? 392 : (has_rank ? 474 : 374);
+    var ext_r = W - 70, nm_right = has_ext ? 300 : 80;
+    var nm_fs = fs, nw;
+    x.font = '700 ' + nm_fs + 'px Montserrat, sans-serif';
+    for (i = 0; i < n; i++) {
+      nw = x.measureText(String(T[i][2])).width;
+      while (nm_fs > 22 && nw > W - nm_l - nm_right) {
+        nm_fs -= 2; x.font = '700 ' + nm_fs + 'px Montserrat, sans-serif';
+        nw = x.measureText(String(T[i][2])).width;
+      }
+    }
+    if (has_ext) {
+      x.fillStyle = 'rgba(19,41,75,0.55)';
+      x.font = '800 24px Montserrat, sans-serif';
+      x.textAlign = 'right';
+      x.fillText('CURRENT PENSION', vl_r, top - 16);
+      x.fillText('LIFETIME BENEFIT', ext_r, top - 16);
+    }
+    var sub_fs = Math.max(17, Math.round(nm_fs * 0.64));
+    if (has_sub) {
+      x.font = '600 ' + sub_fs + 'px Montserrat, sans-serif';
+      for (i = 0; i < n; i++) {
+        nw = x.measureText(String(T[i][4] || '')).width;
+        while (sub_fs > 13 && nw > W - nm_l - 80) {
+          sub_fs -= 1; x.font = '600 ' + sub_fs + 'px Montserrat, sans-serif';
+          nw = x.measureText(String(T[i][4] || '')).width;
+        }
+      }
+    }
+    for (i = 0; i < n; i++) {
+      var r_top = top + i * row_h, hi = !!T[i][3];
+      var mid = r_top + row_h * (has_sub ? 0.46 : 0.66);
+      if (hi) { x.fillStyle = 'rgba(254,95,5,0.11)'; round(x, 70, r_top + 2, W - 140, row_h - 4, 8); }
+      if (i) { x.fillStyle = '#e6eaf1'; x.fillRect(70, r_top, W - 140, 1); }
+      x.fillStyle = hi ? '#fe5f05' : '#13294b';
+      x.textAlign = 'right';
+      x.font = '800 ' + Math.round(fs * 0.88) + 'px Montserrat, sans-serif';
+      x.fillText(String(T[i][0]), rk_r, mid);
+      if (o.val_orange) x.fillStyle = '#fe5f05';
+      x.font = '900 ' + fs + 'px Montserrat, sans-serif';
+      x.fillText(String(T[i][1]), vl_r, mid);
+      x.fillStyle = hi ? '#fe5f05' : '#13294b';
+      x.textAlign = 'left';
+      x.font = '700 ' + nm_fs + 'px Montserrat, sans-serif';
+      x.fillText(String(T[i][2]), nm_l, mid);
+      if (has_sub && T[i][4]) {
+        x.fillStyle = 'rgba(19,41,75,0.58)';
+        x.font = '600 ' + sub_fs + 'px Montserrat, sans-serif';
+        x.fillText(String(T[i][4]), nm_l, mid + sub_fs * 1.35);
+      }
+      if (has_ext && T[i][5]) {
+        x.textAlign = 'right';
+        x.fillStyle = hi ? '#fe5f05' : '#13294b';
+        x.font = '800 ' + Math.round(fs * 0.86) + 'px Montserrat, sans-serif';
+        x.fillText(String(T[i][5]), ext_r, mid);
+      }
+    }
+    x.textAlign = 'center'; x.fillStyle = 'rgba(19,41,75,0.55)';
+    var sfs = 40, sl;
+    x.font = '600 ' + sfs + 'px Montserrat, sans-serif';
+    sl = wrap(x, o.source || '', 900);
+    if (sl.length > 1) { sfs = 34; x.font = '600 ' + sfs + 'px Montserrat, sans-serif'; sl = wrap(x, o.source || '', 920); }
+    var sy = H - 80 - (sl.length - 1) * (sfs + 8);
+    for (i = 0; i < sl.length; i++) { x.fillText(sl[i], W / 2, sy); sy += sfs + 8; }
+    c.toBlob(cb, 'image/png');
+  }
+  function ready(fn){
+    var done = 0;
+    var go = function(){ if (!done) { done = 1; fn(); } };
+    if (document.fonts && document.fonts.load) {
+      try {
+        document.fonts.load('900 90px Montserrat');
+        document.fonts.load('800 40px Montserrat');
+        document.fonts.load('700 40px Montserrat');
+      } catch (e) {}
+      if (document.fonts.ready && document.fonts.ready.then) { document.fonts.ready.then(go); }
+      setTimeout(go, 1200);
+    } else { go(); }
+  }
+  /* Number cards: the hosted renderer shrinks the big number to fit the card's
+     HEIGHT but never its WIDTH, so long values like $4,747.53 run off both
+     edges. This painter fits width and height, and wraps the source line. */
+  function paintNum(o, logo, cb){
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var x = c.getContext('2d');
+    x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
+    x.fillStyle = '#fe5f05'; x.fillRect(0, 0, W, 20); x.fillRect(0, H - 20, W, 20);
+    x.textAlign = 'center';
+    var top = 300;
+    if (logo && logo.naturalWidth) {
+      var lw = 520, lh = lw * logo.naturalHeight / logo.naturalWidth;
+      x.drawImage(logo, (W - lw) / 2, 110, lw, lh);
+      top = 110 + lh + 120;
+    }
+    var src_fs = 40, src_l = [];
+    x.font = '600 ' + src_fs + 'px Montserrat, sans-serif';
+    if (o.source) {
+      src_l = wrap(x, String(o.source), 900);
+      if (src_l.length > 2) { src_fs = 34; x.font = '600 ' + src_fs + 'px Montserrat, sans-serif'; src_l = wrap(x, String(o.source), 920); }
+    }
+    var src_top = H - 80 - (src_l.length ? (src_l.length - 1) * (src_fs + 8) : 0);
+    var pre_fs = 56, pre_l = [];
+    if (o.pre) {
+      x.font = '800 ' + pre_fs + 'px Montserrat, sans-serif';
+      pre_l = wrap(x, String(o.pre).toUpperCase(), 900);
+      while (pre_l.length > 2 && pre_fs > 40) {
+        pre_fs -= 4; x.font = '800 ' + pre_fs + 'px Montserrat, sans-serif';
+        pre_l = wrap(x, String(o.pre).toUpperCase(), 900);
+      }
+    }
+    var num_txt = String(o.num == null ? '' : o.num);
+    var num_fs = 320;
+    x.font = '900 ' + num_fs + 'px Montserrat, sans-serif';
+    while (num_fs > 96 && x.measureText(num_txt).width > 900) {
+      num_fs -= 8; x.font = '900 ' + num_fs + 'px Montserrat, sans-serif';
+    }
+    var lab_fs = 74, lab_lh, lab_l = [];
+    if (o.label) {
+      x.font = '700 ' + lab_fs + 'px Montserrat, sans-serif';
+      lab_l = wrap(x, String(o.label), 880);
+    }
+    var con_fs = 52, con_l = [];
+    if (o.contrast) {
+      x.font = '700 ' + con_fs + 'px Montserrat, sans-serif';
+      con_l = wrap(x, String(o.contrast), 860);
+    }
+    var avail = (src_top - 80) - top;
+    var block_h = function(){
+      lab_lh = lab_fs * 1.32;
+      return (pre_l.length ? pre_l.length * (pre_fs * 1.2) + 34 : 0)
+        + num_fs * 0.78 + 56 + lab_l.length * lab_lh
+        + (con_l.length ? 52 + con_l.length * (con_fs * 1.3) : 0);
+    };
+    while (block_h() > avail && (num_fs > 120 || lab_fs > 52)) {
+      if (num_fs > 120) { num_fs -= 10; }
+      else {
+        lab_fs -= 3;
+        x.font = '700 ' + lab_fs + 'px Montserrat, sans-serif';
+        lab_l = o.label ? wrap(x, String(o.label), 880) : [];
+      }
+    }
+    var y = top + Math.max(0, (avail - block_h()) / 2);
+    if (pre_l.length) {
+      x.fillStyle = '#fe5f05'; x.font = '800 ' + pre_fs + 'px Montserrat, sans-serif';
+      for (var pi = 0; pi < pre_l.length; pi++) { y += pre_fs; x.fillText(pre_l[pi], W / 2, y); y += pre_fs * 0.2; }
+      y += 34;
+    }
+    x.fillStyle = '#fe5f05'; x.font = '900 ' + num_fs + 'px Montserrat, sans-serif';
+    y += num_fs * 0.78;
+    x.fillText(num_txt, W / 2, y);
+    y += 56;
+    if (lab_l.length) {
+      x.fillStyle = '#13294b'; x.font = '700 ' + lab_fs + 'px Montserrat, sans-serif';
+      for (var li = 0; li < lab_l.length; li++) { y += lab_lh; x.fillText(lab_l[li], W / 2, y); }
+    }
+    if (con_l.length) {
+      y += 52;
+      x.fillStyle = 'rgba(19,41,75,0.72)'; x.font = '700 ' + con_fs + 'px Montserrat, sans-serif';
+      for (var ci = 0; ci < con_l.length; ci++) { y += con_fs * 1.3; x.fillText(con_l[ci], W / 2, y); }
+    }
+    if (src_l.length) {
+      x.fillStyle = 'rgba(19,41,75,0.55)'; x.font = '600 ' + src_fs + 'px Montserrat, sans-serif';
+      var sy = src_top;
+      for (var si = 0; si < src_l.length; si++) { x.fillText(src_l[si], W / 2, sy); sy += src_fs + 8; }
+    }
+    c.toBlob(cb, 'image/png');
+  }
+  function drawNum(o, cb){
+    ready(function(){
+      var src = window.FFI_CARD_LOGO || window.FFI_OP_LOGO || window.FFI_PTX_LOGO;
+      if (!src) { paintNum(o, null, cb); return; }
+      var im = new Image();
+      im.onload = function(){ paintNum(o, im, cb); };
+      im.onerror = function(){ paintNum(o, null, cb); };
+      im.src = src;
+    });
+  }
+  function drawTbl(o, cb){
+    ready(function(){
+      var src = window.FFI_CARD_LOGO || window.FFI_OP_LOGO || window.FFI_PTX_LOGO;
+      if (!src) { paint(o, null, cb); return; }
+      var im = new Image();
+      im.onload = function(){ paint(o, im, cb); };
+      im.onerror = function(){ paint(o, null, cb); };
+      im.src = src;
+    });
+  }
+  function paintBars(o, logo, cb){
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var x = c.getContext('2d');
+    x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
+    x.fillStyle = '#fe5f05'; x.fillRect(0, 0, W, 20); x.fillRect(0, H - 20, W, 20);
+    x.textAlign = 'center';
+    var num = function(s){ var v = parseFloat(String(s).replace(/[^0-9.\-]/g, '')); return isNaN(v) ? 0 : v; };
+    var i, y = 300;
+    if (logo && logo.naturalWidth) {
+      var lw = 520, lh = lw * logo.naturalHeight / logo.naturalWidth;
+      x.drawImage(logo, (W - lw) / 2, 110, lw, lh);
+      y = 110 + lh + 110;
+    }
+    if (o.pre) {
+      var pfs = 64, pl;
+      x.font = '800 ' + pfs + 'px Montserrat, sans-serif';
+      pl = wrap(x, String(o.pre).toUpperCase(), 920);
+      while (pl.length > 2 && pfs > 44) {
+        pfs -= 3; x.font = '800 ' + pfs + 'px Montserrat, sans-serif';
+        pl = wrap(x, String(o.pre).toUpperCase(), 920);
+      }
+      x.fillStyle = '#fe5f05';
+      for (i = 0; i < pl.length; i++) { y += pfs; x.fillText(pl[i], W / 2, y); y += pfs * 0.22; }
+      y += 28;
+    }
+    var hd = o.hed || o.title || '';
+    if (hd) {
+      var hfs = 94, hl;
+      x.font = '900 ' + hfs + 'px Montserrat, sans-serif';
+      hl = wrap(x, hd, 950);
+      while (hl.length > 3 && hfs > 56) {
+        hfs -= 4; x.font = '900 ' + hfs + 'px Montserrat, sans-serif';
+        hl = wrap(x, hd, 950);
+      }
+      x.fillStyle = '#13294b';
+      for (i = 0; i < hl.length; i++) { y += hfs * 0.92; x.fillText(hl[i], W / 2, y); y += hfs * 0.18; }
+    }
+    var sfs = 40, sl = [];
+    x.font = '600 ' + sfs + 'px Montserrat, sans-serif';
+    if (o.source) {
+      sl = wrap(x, String(o.source), 900);
+      if (sl.length > 2) { sfs = 34; x.font = '600 ' + sfs + 'px Montserrat, sans-serif'; sl = wrap(x, String(o.source), 920); }
+    }
+    var src_top = H - 80 - (sl.length ? (sl.length - 1) * (sfs + 8) : 0);
+    var cfs = 50, clh = 64, cl = [];
+    if (o.label) {
+      x.font = '700 ' + cfs + 'px Montserrat, sans-serif';
+      cl = wrap(x, String(o.label), 890);
+      while (cl.length > 3 && cfs > 38) {
+        cfs -= 2; clh -= 3; x.font = '700 ' + cfs + 'px Montserrat, sans-serif';
+        cl = wrap(x, String(o.label), 890);
+      }
+    }
+    var bub = o.bubble ? String(o.bubble).toUpperCase() : '';
+    var pill_h = bub ? 108 : 0, pill_gap = bub ? 54 : 0;
+    var cap_h = cl.length ? cl.length * clh + 40 : 0;
+    var year_h = 100;
+    var base = src_top - 90 - cap_h - pill_h - pill_gap - year_h;
+    var B = o.bars, n = B.length;
+    var bw = Math.min(250, Math.floor((820 - (n - 1) * 110) / n));
+    var gap = n > 2 ? 110 : 170;
+    var span = n * bw + (n - 1) * gap;
+    var left = (W - span) / 2;
+    var top = y + 70;
+    var max_h = base - top - 108;
+    if (max_h > 640) { top += (max_h - 640) / 2; max_h = 640; }
+    if (max_h < 240) max_h = 240;
+    var peak = 0;
+    for (i = 0; i < n; i++) { peak = Math.max(peak, num(B[i][1])); }
+    if (!peak) peak = 1;
+    var vfs = 78;
+    var fits = function(f){
+      var k; x.font = '900 ' + f + 'px Montserrat, sans-serif';
+      for (k = 0; k < n; k++) { if (x.measureText(String(B[k][1])).width > bw + 56) return false; }
+      return true;
+    };
+    while (vfs > 34 && !fits(vfs)) vfs -= 2;
+    x.fillStyle = 'rgba(19,41,75,0.16)';
+    x.fillRect(left - 50, base, span + 100, 5);
+    for (i = 0; i < n; i++) {
+      var cx = left + i * (bw + gap) + bw / 2;
+      var h = Math.max(14, max_h * num(B[i][1]) / peak);
+      x.fillStyle = i === n - 1 ? '#fe5f05' : '#13294b';
+      x.fillRect(cx - bw / 2, base - h, bw, h);
+      x.font = '900 ' + vfs + 'px Montserrat, sans-serif';
+      x.fillText(String(B[i][1]), cx, base - h - 34);
+      x.fillStyle = '#13294b';
+      x.font = '700 56px Montserrat, sans-serif';
+      x.fillText(String(B[i][0]), cx, base + 78);
+    }
+    var below = base + year_h;
+    if (bub) {
+      var bfs = 58;
+      x.font = '900 ' + bfs + 'px Montserrat, sans-serif';
+      while (bfs > 34 && x.measureText(bub).width > 790) { bfs -= 2; x.font = '900 ' + bfs + 'px Montserrat, sans-serif'; }
+      var pw = x.measureText(bub).width + 120;
+      x.fillStyle = '#fe5f05';
+      round(x, (W - pw) / 2, below + pill_gap, pw, pill_h, pill_h / 2);
+      x.fillStyle = '#ffffff';
+      x.textBaseline = 'middle';
+      x.fillText(bub, W / 2, below + pill_gap + pill_h / 2 + 3);
+      x.textBaseline = 'alphabetic';
+      below += pill_gap + pill_h;
+    }
+    if (cl.length) {
+      x.fillStyle = '#13294b';
+      x.font = '700 ' + cfs + 'px Montserrat, sans-serif';
+      var cy = below + 74;
+      for (i = 0; i < cl.length; i++) { x.fillText(cl[i], W / 2, cy); cy += clh; }
+    }
+    if (sl.length) {
+      x.fillStyle = 'rgba(19,41,75,0.55)';
+      x.font = '600 ' + sfs + 'px Montserrat, sans-serif';
+      var sy = src_top;
+      for (i = 0; i < sl.length; i++) { x.fillText(sl[i], W / 2, sy); sy += sfs + 8; }
+    }
+    c.toBlob(cb, 'image/png');
+  }
+  /* Change-since card: one labeled row per category, signed value and a bar.
+     Negative changes read navy and grow left of center; growth reads orange. */
+  function paintDelta(o, logo, cb){
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var x = c.getContext('2d');
+    x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
+    x.fillStyle = '#fe5f05'; x.fillRect(0, 0, W, 20); x.fillRect(0, H - 20, W, 20);
+    var D = o.delta, n = D.length, i, top = 300;
+    x.textAlign = 'center';
+    if (logo && logo.naturalWidth) {
+      var lw = 460, lh = lw * logo.naturalHeight / logo.naturalWidth;
+      x.drawImage(logo, (W - lw) / 2, 110, lw, lh);
+      top = 110 + lh + 120;
+    }
+    var hd = o.hed || o.title || '';
+    if (hd) {
+      var hfs = 90, hl;
+      x.font = '900 ' + hfs + 'px Montserrat, sans-serif';
+      hl = wrap(x, String(hd).toUpperCase(), 900);
+      while (hl.length > 4 && hfs > 46) {
+        hfs -= 4; x.font = '900 ' + hfs + 'px Montserrat, sans-serif';
+        hl = wrap(x, String(hd).toUpperCase(), 900);
+      }
+      x.fillStyle = '#13294b';
+      for (i = 0; i < hl.length; i++) { x.fillText(hl[i], W / 2, top + hfs * 0.86); top += hfs * 1.06; }
+      top += 10;
+    }
+    if (o.sub) {
+      x.fillStyle = 'rgba(19,41,75,0.72)';
+      x.font = '800 56px Montserrat, sans-serif';
+      var sbl = wrap(x, String(o.sub), 900);
+      for (i = 0; i < sbl.length; i++) { x.fillText(sbl[i], W / 2, top + 48); top += 68; }
+    }
+    /* source first, so the rows can claim every pixel that is left */
+    x.fillStyle = 'rgba(19,41,75,0.55)';
+    var sfs = 36, sl = wrap(x, o.source || '', 900);
+    x.font = '600 ' + sfs + 'px Montserrat, sans-serif';
+    sl = wrap(x, o.source || '', 900);
+    if (sl.length > 2) { sfs = 30; x.font = '600 ' + sfs + 'px Montserrat, sans-serif'; sl = wrap(x, o.source || '', 920); }
+    var src_top = H - 90 - (sl.length ? (sl.length - 1) * (sfs + 8) : 0);
+    for (i = 0; i < sl.length; i++) { x.fillText(sl[i], W / 2, src_top + i * (sfs + 8)); }
+    var val = function(s){ var v = parseFloat(String(s).replace(/[^0-9.\-]/g, '')); return isNaN(v) ? 0 : v; };
+    var neg = function(s){ return /^\s*[-\u2212]/.test(String(s)) || val(s) < 0; };
+    var av, max_pos = 0, max_neg = 0;
+    for (i = 0; i < n; i++) {
+      av = Math.abs(val(D[i][1]));
+      if (neg(D[i][1])) { if (av > max_neg) max_neg = av; }
+      else if (av > max_pos) max_pos = av;
+    }
+    var total = (max_pos + max_neg) || 1;
+    top += 40;
+    var space = src_top - 130 - top;
+    var row_h = Math.min(230, space / n);
+    top += Math.max(0, (space - n * row_h) / 2);
+    var pad = Math.min(30, row_h * 0.16);
+    var bar_h = Math.max(22, Math.min(40, row_h * 0.22));
+    var lfs = Math.max(32, Math.min(46, Math.round(row_h * 0.22)));
+    var vfs = Math.max(42, Math.min(72, Math.round(row_h * 0.34)));
+    /* the value sits at the right margin, so the bars get the width that is
+       left over; the label owns its own line above them */
+    x.font = '900 ' + vfs + 'px Montserrat, sans-serif';
+    var vw = 0;
+    for (i = 0; i < n; i++) vw = Math.max(vw, x.measureText(String(D[i][1])).width);
+    var span = (W - 180) - (vw + 40);
+    var zero_x = 90 + span * max_neg / total;
+    var lbl_h = lfs, bar_band = Math.max(bar_h, vfs);
+    var cell_h = lbl_h + pad + bar_band;
+    for (i = 0; i < n; i++) {
+      var r_top = top + i * row_h + Math.max(0, (row_h - cell_h) / 2);
+      var down = neg(D[i][1]);
+      var col = down ? '#13294b' : '#fe5f05';
+      x.textAlign = 'left';
+      x.fillStyle = '#13294b';
+      x.font = '700 ' + lfs + 'px Montserrat, sans-serif';
+      var lbl = String(D[i][0]), lfs2 = lfs, lw2 = x.measureText(lbl).width;
+      while (lfs2 > 24 && lw2 > W - 180) {
+        lfs2 -= 2; x.font = '700 ' + lfs2 + 'px Montserrat, sans-serif';
+        lw2 = x.measureText(lbl).width;
+      }
+      x.fillText(lbl, 90, r_top + lfs2 * 0.86);
+      var band_top = r_top + lbl_h + pad;
+      var by = band_top + (bar_band - bar_h) / 2;
+      var len = Math.max(bar_h, span * Math.abs(val(D[i][1])) / total);
+      /* axis only where the bars are, never behind the labels */
+      if (max_neg > 0) {
+        x.fillStyle = 'rgba(19,41,75,0.38)';
+        x.fillRect(zero_x - 2, by - 12, 4, bar_h + 24);
+      }
+      x.fillStyle = col;
+      round(x, down ? zero_x - len : zero_x, by, len, bar_h, bar_h / 2);
+      x.textAlign = 'right';
+      x.fillStyle = col;
+      x.font = '900 ' + vfs + 'px Montserrat, sans-serif';
+      x.fillText(String(D[i][1]), W - 90, band_top + bar_band * 0.5 + vfs * 0.35);
+    }
+    c.toBlob(cb, 'image/png');
+  }
+  /* Three-column card: district, reading proficiency, spending per student.
+     Column headers carry the wording so the rows stay short. */
+  function paintCols(o, logo, cb){
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var x = c.getContext('2d');
+    x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H);
+    x.fillStyle = '#fe5f05'; x.fillRect(0, 0, W, 20); x.fillRect(0, H - 20, W, 20);
+    var R = o.cols, n = R.length, i, top = 300;
+    x.textAlign = 'center';
+    if (logo && logo.naturalWidth) {
+      var lw = 440, lh = lw * logo.naturalHeight / logo.naturalWidth;
+      x.drawImage(logo, (W - lw) / 2, 100, lw, lh);
+      top = 100 + lh + 100;
+    }
+    var hd = o.title || o.hed || '';
+    if (hd) {
+      var hfs = 82, hl;
+      x.font = '900 ' + hfs + 'px Montserrat, sans-serif';
+      hl = wrap(x, String(hd).toUpperCase(), 900);
+      while (hl.length > 3 && hfs > 48) {
+        hfs -= 4; x.font = '900 ' + hfs + 'px Montserrat, sans-serif';
+        hl = wrap(x, String(hd).toUpperCase(), 900);
+      }
+      x.fillStyle = '#13294b';
+      for (i = 0; i < hl.length; i++) { x.fillText(hl[i], W / 2, top + hfs * 0.86); top += hfs * 1.06; }
+      top += 6;
+    }
+    if (o.sub) {
+      x.fillStyle = '#fe5f05';
+      var cfs = 40, cl;
+      x.font = '800 ' + cfs + 'px Montserrat, sans-serif';
+      cl = wrap(x, String(o.sub).toUpperCase(), 880);
+      while (cl.length > 2 && cfs > 30) {
+        cfs -= 2; x.font = '800 ' + cfs + 'px Montserrat, sans-serif';
+        cl = wrap(x, String(o.sub).toUpperCase(), 900);
+      }
+      for (i = 0; i < cl.length; i++) { x.fillText(cl[i], W / 2, top + cfs * 0.9); top += cfs * 1.18; }
+      top += 12;
+    }
+    x.fillStyle = 'rgba(19,41,75,0.55)';
+    var sfs = 30, sl;
+    x.font = '600 ' + sfs + 'px Montserrat, sans-serif';
+    sl = wrap(x, o.source || '', 900);
+    if (sl.length > 3) { sfs = 26; x.font = '600 ' + sfs + 'px Montserrat, sans-serif'; sl = wrap(x, o.source || '', 920); }
+    var src_top = H - 80 - (sl.length ? (sl.length - 1) * (sfs + 6) : 0);
+    for (i = 0; i < sl.length; i++) { x.fillText(sl[i], W / 2, src_top + i * (sfs + 6)); }
+    /* columns: district left, proficiency centered, spending right */
+    var L = 70, pc = 640, rr = W - 70;
+    var hds = o.colhd || ['District', 'Read at grade level', 'Spending per student'];
+    x.font = '800 27px Montserrat, sans-serif';
+    x.fillStyle = 'rgba(19,41,75,0.6)';
+    var h1 = wrap(x, String(hds[0]).toUpperCase(), 330);
+    var h2 = wrap(x, String(hds[1]).toUpperCase(), 230);
+    var h3 = wrap(x, String(hds[2]).toUpperCase(), 230);
+    var hrows = Math.max(h1.length, Math.max(h2.length, h3.length));
+    top += 26;
+    var hy = top;
+    for (i = 0; i < h1.length; i++) { x.textAlign = 'left'; x.fillText(h1[i], L, hy + (hrows - h1.length + i) * 32 + 24); }
+    for (i = 0; i < h2.length; i++) { x.textAlign = 'center'; x.fillText(h2[i], pc, hy + (hrows - h2.length + i) * 32 + 24); }
+    for (i = 0; i < h3.length; i++) { x.textAlign = 'right'; x.fillText(h3[i], rr, hy + (hrows - h3.length + i) * 32 + 24); }
+    top += hrows * 32 + 34;
+    x.fillStyle = '#13294b';
+    x.fillRect(L, top - 14, W - 140, 3);
+    var space = src_top - 80 - top;
+    var row_h = Math.min(170, space / n);
+    var nfs = Math.max(24, Math.min(40, Math.round(row_h * 0.30)));
+    var pfs = Math.max(28, Math.min(50, Math.round(row_h * 0.36)));
+    for (i = 0; i < n; i++) {
+      var ry = top + i * row_h, mid = ry + row_h * 0.66, tot = !!R[i][3];
+      if (i) { x.fillStyle = '#e6eaf1'; x.fillRect(L, ry, W - 140, 1); }
+      if (tot) {
+        /* district total: tinted band under an orange rule */
+        x.fillStyle = 'rgba(254,95,5,0.10)';
+        round(x, L, ry + 3, W - 140, row_h - 6, 8);
+        x.fillStyle = '#fe5f05';
+        x.fillRect(L, ry, W - 140, 3);
+      }
+      x.textAlign = 'left';
+      x.fillStyle = '#13294b';
+      var nm = String(R[i][0]), nfs2 = nfs;
+      x.font = '700 ' + nfs2 + 'px Montserrat, sans-serif';
+      while (nfs2 > 20 && x.measureText(nm).width > 470) {
+        nfs2 -= 2; x.font = '700 ' + nfs2 + 'px Montserrat, sans-serif';
+      }
+      x.fillText(nm, L, mid);
+      x.textAlign = 'center';
+      x.fillStyle = '#fe5f05';
+      x.font = '900 ' + pfs + 'px Montserrat, sans-serif';
+      x.fillText(String(R[i][1]), pc, mid);
+      x.textAlign = 'right';
+      x.fillStyle = '#fe5f05';
+      x.font = '800 ' + Math.round(pfs * 0.86) + 'px Montserrat, sans-serif';
+      x.fillText(String(R[i][2]), rr, mid);
+    }
+    c.toBlob(cb, 'image/png');
+  }
+  function drawCols(o, cb){
+    ready(function(){
+      var src = window.FFI_CARD_LOGO || window.FFI_OP_LOGO || window.FFI_PTX_LOGO;
+      if (!src) { paintCols(o, null, cb); return; }
+      var im = new Image();
+      im.onload = function(){ paintCols(o, im, cb); };
+      im.onerror = function(){ paintCols(o, null, cb); };
+      im.src = src;
+    });
+  }
+  function drawDelta(o, cb){
+    ready(function(){
+      var src = window.FFI_CARD_LOGO || window.FFI_OP_LOGO || window.FFI_PTX_LOGO;
+      if (!src) { paintDelta(o, null, cb); return; }
+      var im = new Image();
+      im.onload = function(){ paintDelta(o, im, cb); };
+      im.onerror = function(){ paintDelta(o, null, cb); };
+      im.src = src;
+    });
+  }
+  function drawBars(o, cb){
+    ready(function(){
+      var src = window.FFI_CARD_LOGO || window.FFI_OP_LOGO || window.FFI_PTX_LOGO;
+      if (!src) { paintBars(o, null, cb); return; }
+      var im = new Image();
+      im.onload = function(){ paintBars(o, im, cb); };
+      im.onerror = function(){ paintBars(o, null, cb); };
+      im.src = src;
+    });
+  }
+  var tries = 0;
+  var iv = setInterval(function(){
+    if (typeof window.FFI_makeCard === 'function' && !window.FFI_makeCard.ffiV2) {
+      var base = window.FFI_makeCard;
+      var w = function(o, cb){
+        if (o && o.cols && o.cols.length) { drawCols(o, cb); return; }
+        if (o && o.delta && o.delta.length) { drawDelta(o, cb); return; }
+        if (o && o.bars && o.bars.length) { drawBars(o, cb); return; }
+        if (o && o.tbl && o.tbl.length) { drawTbl(o, cb); return; }
+        var plain_num = o && o.num && !o.rows && !o.svg && !o.svgStr && !o.duo && !o.trend && !o.rank && !o.title;
+        if (plain_num) { drawNum(o, cb); return; }
+        base(o, cb);
+      };
+      w.ffiV2 = 1;
+      window.FFI_makeCard = w;
+      clearInterval(iv);
+    } else if (++tries > 200) { clearInterval(iv); }
+  }, 50);
 })();
